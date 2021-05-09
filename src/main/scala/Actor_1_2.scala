@@ -1,36 +1,42 @@
-import java.sql.{Connection, DriverManager, ResultSet, Timestamp}
-
+import java.sql.Timestamp
 import akka.actor.{Actor, ActorLogging, ActorRef}
+import scala.collection.mutable.ListBuffer
 
 class Actor_1_2(adder: ActorRef) extends Actor with ActorLogging{
 
-  Class.forName("org.h2.Driver")
-  val conn: Connection = DriverManager.getConnection("jdbc:h2:~/h2test", "", "")
+  val values = new ListBuffer[TemperatureAtTime]
 
-  def updateAndMeasure(add: Add): Unit = add match{
-    case Add(timestamp: Timestamp, f:Float) =>
-      adder ! add
+  private def updateAndMeasure(tat: TemperatureAtTime): Unit = tat match{
+    case tat: TemperatureAtTime =>
+      adder ! tat
   }
 
   override def receive: Receive = {
-    case add: Add => {
-      updateAndMeasure(add)
-      //val mean = computeMean(getMeasurementsOfPast24Hours())
-      //log.info("Mean = " + mean)
-    }
+    case tat: TemperatureAtTime =>
+      updateAndMeasure(TemperatureAtTime(tat.timestamp,computeMean(tat.timestamp, tat.f)))
+    case _ =>
+      log.warning("Actor_2: Eingabe konnte nicht verarbeitet werden")
   }
 
-  def computeMean(rs: ResultSet): Float ={
-    if(!rs.isBeforeFirst) 0
-    else {
-      val tmp = Iterator.from(0).takeWhile(_ => rs.next()).map(_ => rs.getInt(1)).toList
-      tmp.sum/tmp.size
+  private def computeMean(timestamp: Timestamp, f: Float): Float = {
+    values+=TemperatureAtTime(timestamp, f)
+
+    val measurements = new ListBuffer[Float]
+    val testTimePeriod: Timestamp = new Timestamp(Timestamp.valueOf(timestamp.toLocalDateTime.minusDays(1)).getTime - 1)
+
+    for(x <- values){
+      if(testTimePeriod.before(x.timestamp)){
+        measurements+=x.f
+      }
     }
+    getMeanOfPast24Hours(measurements)
   }
 
-  def getMeasurementsOfPast24Hours(): ResultSet ={
-    val prepStatement = conn.prepareStatement(
-      """SELECT MESSWERT FROM bvs_aufgabe_1 WHERE ZEITSTEMPEL >= DATEADD(hh, -24, CURRENT_TIMESTAMP())""")
-    prepStatement.executeQuery()
+  private def getMeanOfPast24Hours(measurements: ListBuffer[Float]): Float ={
+    var sum: Float = 0
+    for(y <- measurements){
+      sum+=y
+    }
+    sum/measurements.length
   }
 }
