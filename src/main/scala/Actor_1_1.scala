@@ -29,6 +29,6 @@ class Actor_1_1 extends Actor with ActorLogging{
 
     stmtLogBegin.executeUpdate()
     stmtLogBegin.close()
-    log.info(self.path.name + " from "+sender() + " inserted (" + tat.timestamp + " | " + tat.f + ") into DB")
+    log.info(self.path.name + " inserted (" + tat.timestamp + " | " + tat.f + ") into DB")
   }
 }
