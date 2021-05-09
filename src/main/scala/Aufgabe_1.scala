@@ -21,6 +21,6 @@ object Aufgabe_1 extends App{
   //actor_2 ! TemperatureAtTime(timestamp , -10.44f)
   //actor_3 ! "07.05.2021 17:03:00,,4.2,,,,,,,,,,,"
 
-  actor_4 ! "C:\\Users\\timsc\\Downloads\\munge-maven-plugin-munge-maven-plugin-1.0\\NextTry\\src\\main\\resources\\small_jena.csv"
+  actor_4 ! ".\\src\\main\\resources\\small_jena.csv"
 
 }
