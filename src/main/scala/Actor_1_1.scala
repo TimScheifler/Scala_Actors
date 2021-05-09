@@ -1,9 +1,6 @@
 import java.sql.{Connection, DriverManager, Timestamp}
 
-import Aufgabe_1.system
 import akka.actor.{Actor, ActorLogging, PoisonPill}
-
-import scala.concurrent.duration.DurationInt
 
 case class TemperatureAtTime(timestamp: Timestamp, f: Float)
 
