@@ -19,24 +19,19 @@ class Actor_1_2(adder: ActorRef) extends Actor with ActorLogging{
   }
 
   private def computeMean(timestamp: Timestamp, f: Float): Float = {
+    var sum = 0f
     values+=TemperatureAtTime(timestamp, f)
+    if(values.size > 145)
+      values.remove(0)
 
-    val measurements = new ListBuffer[Float]
-    val testTimePeriod: Timestamp = new Timestamp(Timestamp.valueOf(timestamp.toLocalDateTime.minusDays(1)).getTime - 1)
+    for(x <- values)
+      sum += x.f
 
-    for(x <- values){
-      if(testTimePeriod.before(x.timestamp)){
-        measurements+=x.f
-      }
-    }
-    getMeanOfPast24Hours(measurements)
+    //log.info(""+values.size)
+    getMeanOfPast24Hours(sum, values.size)
   }
 
-  private def getMeanOfPast24Hours(measurements: ListBuffer[Float]): Float ={
-    var sum: Float = 0
-    for(y <- measurements){
-      sum+=y
-    }
-    sum/measurements.length
+  private def getMeanOfPast24Hours(sum: Float, size: Int): Float ={
+    sum/size
   }
 }

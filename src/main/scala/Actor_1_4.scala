@@ -21,7 +21,6 @@ class Actor_1_4(stringReader: ActorRef) extends Actor with ActorLogging {
         case e: FileNotFoundException => log.error("ERROR! File could not be found. " + e)
       }finally {
         log.info("Done.")
-        //context.stop(self)
       }
     case _ =>
       log.warning("Actor_4: Eingabe konnte nicht verarbeitet werden")

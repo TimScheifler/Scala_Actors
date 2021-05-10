@@ -1,5 +1,4 @@
 import java.sql.Timestamp
-
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import java.text.SimpleDateFormat
 
