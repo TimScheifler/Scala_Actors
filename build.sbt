@@ -8,3 +8,5 @@ scalaVersion := "2.12.8"
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.6.14"
 libraryDependencies += "com.h2database" % "h2" % "1.4.200"
 
+libraryDependencies += "com.typesafe.akka" %% "akka-cluster" % "2.6.14"
+libraryDependencies +="com.typesafe.akka" %% "akka-http" % "10.2.4"

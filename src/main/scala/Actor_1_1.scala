@@ -1,6 +1,6 @@
 import java.sql.{Connection, DriverManager, Timestamp}
 
-import akka.actor.{Actor, ActorLogging, PoisonPill}
+import akka.actor.{Actor, ActorLogging, ActorSystem, PoisonPill, Props}
 
 case class TemperatureAtTime(timestamp: Timestamp, f: Float)
 
@@ -16,6 +16,9 @@ class Actor_1_1 extends Actor with ActorLogging{
       }finally {
         self ! PoisonPill
       }
+    case s:String =>
+      log.info("Actor1 received: " + s)
+
     case _ =>
       log.warning("Actor_1: Eingabe konnte nicht verarbeitet werden")
   }
@@ -28,4 +31,8 @@ class Actor_1_1 extends Actor with ActorLogging{
     stmtLogBegin.close()
     log.info(self.path.name + " inserted (" + tat.timestamp + " | " + tat.f + ") into DB")
   }
+}
+object Server_01 extends App{
+  val system = ActorSystem("hfu")
+  val server = system.actorOf(Props[Actor_1_1], name = "server-actor")
 }
