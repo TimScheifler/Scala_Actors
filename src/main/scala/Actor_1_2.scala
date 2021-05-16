@@ -13,7 +13,8 @@ class Actor_1_2 extends Actor with ActorLogging{
   override def receive: Receive = {
     case tat: TemperatureAtTime =>
       server ! TemperatureAtTime(tat.timestamp,computeMean(tat.timestamp, tat.f))
-
+    case f:Float =>
+      log.info("F: "+f)
     case _ => new RuntimeException("unexpected Message received...")
   }
   private def computeMean(timestamp: Timestamp, f: Float): Float = {

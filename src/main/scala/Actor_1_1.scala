@@ -1,6 +1,9 @@
 import java.sql.{Connection, DriverManager, Timestamp}
 
-import akka.actor.{Actor, ActorLogging, ActorSystem, PoisonPill, Props}
+import akka.actor.TypedActor.dispatcher
+import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
+
+import scala.concurrent.Future
 
 case class TemperatureAtTime(timestamp: Timestamp, f: Float)
 
@@ -11,13 +14,14 @@ class Actor_1_1 extends Actor with ActorLogging{
   var x = 0
   def receive: Receive = {
     case tat: TemperatureAtTime =>
-      try {
         x+=1
         log.info(x+" | INSERT INTO DB")
         insertIntoDB(conn, tat)
-      }
     case s:String =>
-      getMedianAtGivenTime(s)
+      val mySender = sender()
+      Future {
+        mySender ! getMedianAtGivenTime(s)
+      }
 
     case _ =>
       log.warning("Actor_1: Eingabe konnte nicht verarbeitet werden")
