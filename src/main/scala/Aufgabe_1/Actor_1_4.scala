@@ -1,6 +1,7 @@
+package Aufgabe_1
+
 import java.io.FileNotFoundException
 import akka.actor.{Actor, ActorLogging, ActorRef}
-
 import scala.io.Source.fromFile
 
 class Actor_1_4(stringReader: ActorRef) extends Actor with ActorLogging {

@@ -1,6 +1,9 @@
+package Aufgabe_1
+
 import java.sql.Timestamp
-import akka.actor.{Actor, ActorLogging, ActorRef}
 import java.text.SimpleDateFormat
+
+import akka.actor.{Actor, ActorLogging, ActorRef}
 
 class Actor_1_3(meanActor: ActorRef) extends Actor with ActorLogging{
 
@@ -9,13 +12,10 @@ class Actor_1_3(meanActor: ActorRef) extends Actor with ActorLogging{
       meanActor ! tat
   }
 
-  private def dateTimeFormatter(str: String): String = {
-    //01.01.2009 00:10:00
-    val inputFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss")
-    //2021-05-06 17:11:00
+  def dateTimeFormatter(str: String): String = {
+    val inputFormat = new SimpleDateFormat("dd.MM.yyyy_HH:mm:ss")
     val outputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    val formattedDate = outputFormat.format(inputFormat.parse(str))
-    formattedDate
+    outputFormat.format(inputFormat.parse(str))
   }
 
   override def receive: Receive = {
