@@ -8,19 +8,31 @@ class Actor_1_1 extends Actor with ActorLogging{
   private val sqlInsert = """insert into bvs_aufgabe_1(zeitstempel, messwert) values (?, ?)"""
   Class.forName("org.h2.Driver")
   private val conn: Connection = DriverManager.getConnection("jdbc:h2:~/h2test", "", "")
-
+  var x = 0
   def receive: Receive = {
     case tat: TemperatureAtTime =>
       try {
+        x+=1
+        log.info(x+" | INSERT INTO DB")
         insertIntoDB(conn, tat)
-      }finally {
-        self ! PoisonPill
       }
     case s:String =>
-      log.info("Actor1 received: " + s)
+      getMedianAtGivenTime(s)
 
     case _ =>
       log.warning("Actor_1: Eingabe konnte nicht verarbeitet werden")
+  }
+
+  private def getMedianAtGivenTime(s: String): Float = {
+    val stmtLogBegin = conn.createStatement()
+    val rs = stmtLogBegin.executeQuery(
+      "SELECT messwert FROM bvs_aufgabe_1 WHERE zeitstempel = '" + s + "' LIMIT 1")
+    if(rs.next()) {
+      log.info("returning " + rs.getFloat("messwert"))
+      rs.getFloat("messwert")
+    } else {
+      -9999999
+    }
   }
   private def insertIntoDB(conn: Connection, tat: TemperatureAtTime): Unit = {
     val stmtLogBegin = conn.prepareStatement(sqlInsert)

@@ -1,7 +1,6 @@
 import akka.actor.ActorSystem
 import com.typesafe.config.ConfigFactory
-
-import java.io.File
+import java.io.{InputStreamReader}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -15,10 +14,10 @@ object Utils {
     date.format(format)
 
   def createSystem(fileName: String, systemName: String): ActorSystem = {
-    val resource = getClass.getResource(fileName)
-    val configFile=resource.getFile
-    val config = ConfigFactory.parseFile(new File(configFile)).resolve()
+    val resource = getClass.getResourceAsStream(fileName)
+    val configReader = new InputStreamReader(resource)
+    val config = ConfigFactory.parseReader(configReader).resolve()
     val result = ActorSystem(systemName, config)
-    return result
+    result
   }
 }
