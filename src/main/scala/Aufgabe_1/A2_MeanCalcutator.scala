@@ -2,7 +2,6 @@ package Aufgabe_1
 
 import java.sql.Timestamp
 
-import Aufgabe_2.NotYetRegistered
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.ask
 import akka.util.Timeout

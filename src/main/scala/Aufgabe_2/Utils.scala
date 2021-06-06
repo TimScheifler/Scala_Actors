@@ -10,7 +10,7 @@ import com.typesafe.config.ConfigFactory
 object Utils {
 
   private val format = DateTimeFormatter.ofPattern("dd.MM.yyyy_HH:mm:ss")
-  val DEFAULT_VALUE = -9999999
+  val DEFAULT_VALUE: Int = -9999999
   def parseDateTime(text: String): LocalDateTime =
     LocalDateTime.parse(text, format)
 

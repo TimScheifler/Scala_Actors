@@ -5,7 +5,6 @@ import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-import Aufgabe_2.Utils.format
 import akka.actor.{Actor, ActorLogging, ActorRef}
 
 class A3_TimeFormatter(meanActor: ActorRef) extends Actor with ActorLogging{

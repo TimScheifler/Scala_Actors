@@ -1,7 +1,8 @@
 package Aufgabe_1
 
 import java.sql.{Connection, DriverManager, Timestamp}
-import Aufgabe_2.Utils.DEFAULT_VALUE
+
+import Aufgabe_2.Utils
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 
 case class TemperatureAtTime(timestamp: Timestamp, f: Float)
@@ -35,7 +36,7 @@ class Actor_1_1 extends Actor with ActorLogging{
       log.info("returning " + rs.getFloat("messwert") + " to " + sender)
       rs.getFloat("messwert")
     } else {
-      DEFAULT_VALUE
+      Utils.DEFAULT_VALUE
     }
   }
 
