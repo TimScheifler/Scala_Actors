@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter
 import Aufgabe_2.Utils.format
 import akka.actor.{Actor, ActorLogging, ActorRef}
 
-class Actor_1_3(meanActor: ActorRef) extends Actor with ActorLogging{
+class A3_TimeFormatter(meanActor: ActorRef) extends Actor with ActorLogging{
 
   private def updateAndMean(tat: TemperatureAtTime): Unit = tat match {
     case tat: TemperatureAtTime =>

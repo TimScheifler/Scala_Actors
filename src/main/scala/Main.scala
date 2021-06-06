@@ -1,15 +1,15 @@
-import java.sql.Timestamp
-
-import Aufgabe_1.{Actor_1_2, TemperatureAtTime}
-import Aufgabe_2.Utils
+import Aufgabe_1.A2_MeanCalcutator
+import Aufgabe_2.{ServerActor, Utils}
 import akka.actor.Props
 
 object Main extends App {
   val system = Utils.createSystem("/client.conf", "hfu")
-  system.actorOf(Props[Actor_1_2], name = "client-actor")
-  val props1 = Props(new Actor_1_2)
-  val actor_2 = system.actorOf(props1, name = "ClientActor")
+  system.actorOf(Props[ServerActor], name = "client-actor")
 
-  val timestamp = Timestamp.valueOf("2009-01-07 22:30:00")
-  actor_2 ! TemperatureAtTime(timestamp, -10.44f)
+  val serverActor_props = Props(new ServerActor)
+  val serverActor = system.actorOf(serverActor_props, name = "ServerActor")
+  val actor_2_props = Props(new A2_MeanCalcutator(serverActor))
+  val actor2 = system.actorOf(actor_2_props, name = "Actor2")
+
+  actor2 ! "2009-01-07 22:30:00"
 }

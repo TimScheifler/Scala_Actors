@@ -4,7 +4,7 @@ import java.io.FileNotFoundException
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import scala.io.Source.fromFile
 
-class Actor_1_4(stringReader: ActorRef) extends Actor with ActorLogging {
+class A4_FileReader(stringReader: ActorRef) extends Actor with ActorLogging {
 
   private def processLine(line: String): Unit = {
     stringReader ! line

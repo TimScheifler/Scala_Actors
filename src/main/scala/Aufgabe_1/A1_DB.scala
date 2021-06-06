@@ -11,17 +11,19 @@ class Actor_1_1 extends Actor with ActorLogging{
   Class.forName("org.h2.Driver")
   private val conn: Connection = DriverManager.getConnection("jdbc:h2:~/h2test", "", "")
   private val stmtLogBegin = conn.prepareStatement(sqlInsert)
-  var x = 0
+
   def receive: Receive = {
     case tat: TemperatureAtTime =>
-        x+=1
-        log.info(x+" | INSERT INTO DB")
+        log.info("INSERT INTO DB")
         insertIntoDB(tat)
+
     case s:String =>
-      log.info("in getMedianAtGivenTime")
-      sender() ! getMedianAtGivenTime(s)
+      val senderName = sender()
+      senderName ! getMedianAtGivenTime(s)
+
     case _ =>
       log.warning("Actor_1: Eingabe konnte nicht verarbeitet werden")
+
   stmtLogBegin.close()
   }
 
@@ -30,7 +32,7 @@ class Actor_1_1 extends Actor with ActorLogging{
     val rs = stmtLogBegin.executeQuery(
       "SELECT messwert FROM bvs_aufgabe_1 WHERE zeitstempel = '" + s + "' LIMIT 1")
     if(rs.next()) {
-      log.info("returning " + rs.getFloat("messwert"))
+      log.info("returning " + rs.getFloat("messwert") + " to " + sender)
       rs.getFloat("messwert")
     } else {
       DEFAULT_VALUE
@@ -38,7 +40,6 @@ class Actor_1_1 extends Actor with ActorLogging{
   }
 
   private def insertIntoDB(tat: TemperatureAtTime): Unit = {
-
     stmtLogBegin.setTimestamp(1, tat.timestamp)
     stmtLogBegin.setFloat(2, tat.f)
     stmtLogBegin.executeUpdate()
@@ -46,7 +47,7 @@ class Actor_1_1 extends Actor with ActorLogging{
     log.info(self.path.name + " inserted (" + tat.timestamp + " | " + tat.f + ") into DB")
   }
 }
-object Server_01 extends App{
+object Actor_1 extends App{
   val system = ActorSystem("hfu")
   val server = system.actorOf(Props[Actor_1_1], name = "server-actor")
 }
