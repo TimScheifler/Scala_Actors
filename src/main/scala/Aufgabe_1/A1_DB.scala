@@ -14,9 +14,14 @@ class Actor_1_1 extends Actor with ActorLogging{
   private val stmtLogBegin = conn.prepareStatement(sqlInsert)
 
   def receive: Receive = {
+
     case tat: TemperatureAtTime =>
         log.info("INSERT INTO DB")
         insertIntoDB(tat)
+
+    case "count" =>
+      val senderName = sender()
+      senderName ! getDBRecord()
 
     case s:String =>
       val senderName = sender()
@@ -28,8 +33,23 @@ class Actor_1_1 extends Actor with ActorLogging{
   stmtLogBegin.close()
   }
 
+  def getDBRecord(): Int ={
+    val stmtLogBegin = conn.createStatement()
+    val rs = stmtLogBegin.executeQuery(
+      "SELECT COUNT(*) FROM bvs_aufgabe_1")
+    if (rs != null) {
+      rs.last()
+      log.info("LastRow: "+rs.getInt("COUNT(*)"))
+      rs.getInt("COUNT(*)")
+    }
+    else {
+      Utils.DEFAULT_VALUE
+    }
+  }
+
   private def getMedianAtGivenTime(s: String): Float = {
     val stmtLogBegin = conn.createStatement()
+
     val rs = stmtLogBegin.executeQuery(
       "SELECT messwert FROM bvs_aufgabe_1 WHERE zeitstempel = '" + s + "' LIMIT 1")
     if(rs.next()) {

@@ -26,6 +26,19 @@ class ServerActor extends Actor with ActorLogging{
     case state:CurrentClusterState =>
       state.members.filter(_.status==MemberStatus.Up).foreach(register)
 
+    case "count" =>
+      server match {
+        case None =>
+          val senderName = sender()
+          senderName ! NotYetRegistered
+        case Some(actor) =>
+          log.info("In DynamicActor COUNT")
+          val senderName = sender()
+          val future = actor ? "count"
+          val result = Await.result(future, timeout.duration)
+          senderName ! result
+      }
+
     case s:String =>
       server match{
         case None =>
