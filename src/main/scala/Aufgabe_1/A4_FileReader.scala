@@ -15,7 +15,10 @@ class A4_FileReader(stringReader: ActorRef) extends Actor with ActorLogging {
     case path:String =>
       try {
         val bufferedSource = fromFile(path)
-        for (line <- bufferedSource.getLines().drop(1)) {
+        var x = 1
+        for (line <- bufferedSource.getLines()) {
+          log.info( x + " " + self + " is inserting " + line)
+          x = x + 1
           processLine(line)
         }
       }catch {

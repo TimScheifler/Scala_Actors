@@ -29,7 +29,6 @@ class A3_TimeFormatter(meanActor: ActorRef) extends Actor with ActorLogging{
     case s: String =>
       val list = s.split(",")
       val tat = TemperatureAtTime(Timestamp.valueOf(test(list(0))), list(2).toFloat)
-      //val tat = TemperatureAtTime(Timestamp.valueOf(dateTimeFormatter(list(0))), list(2).toFloat)
       updateAndMean(tat)
     case _ =>
       log.warning("Actor_3: Eingabe konnte nicht verarbeitet werden")

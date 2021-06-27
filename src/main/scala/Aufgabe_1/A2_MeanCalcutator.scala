@@ -1,29 +1,57 @@
 package Aufgabe_1
-
 import java.sql.Timestamp
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
-import akka.pattern.ask
+import akka.actor.{ActorSelection, ActorSystem}
+import akka.cluster.ClusterEvent.{CurrentClusterState, MemberUp}
+import akka.cluster.protobuf.msg.ClusterMessages.MemberStatus
 import akka.util.Timeout
 
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
-import scala.util.control.Breaks.{break, breakable}
 
-class A2_MeanCalcutator(serverActor: ActorRef) extends Actor with ActorLogging{
+class A2_MeanCalcutator extends RegistrationActor {
+
+  implicit val actorSystem: ActorSystem = context.system
+
+  val listBuffer = new ListBuffer[TemperatureAtTime]
 
   val values = new ListBuffer[TemperatureAtTime]
   implicit val timeout: Timeout = 5.seconds
 
   override def receive: Receive = {
-    case tat: TemperatureAtTime =>
-      serverActor ! TemperatureAtTime(tat.timestamp,computeMean(tat.timestamp, tat.f))
 
-    case s:String =>
-      tryToRequestTimeFromDB(s, 500, 10)
+    case MemberUp(member)=>log.info("received MemberUp for " + member)
+      register(member)
+      sendListBuffer()
+
+    case state:CurrentClusterState =>
+      log.info("received CurrentClusterState for "+ state)
+      state.members.filter(_.status==MemberStatus.Up).foreach(register)
+
+    case tat: TemperatureAtTime =>
+      server match {
+        case None =>
+          listBuffer+=TemperatureAtTime(tat.timestamp,computeMean(tat.timestamp, tat.f))
+
+        case Some(actorSelection: ActorSelection) =>
+          log.info("in some")
+          actorSelection ! TemperatureAtTime(tat.timestamp,computeMean(tat.timestamp, tat.f))
+      }
 
     case _ => new RuntimeException("unexpected Message received...")
+  }
+
+  def sendListBuffer(): Unit = {
+    server match {
+      case None =>
+        log.info("still not available")
+      case Some(actorSelection: ActorSelection) =>
+        log.info("in some")
+        if(listBuffer.nonEmpty) {
+          listBuffer.foreach(actorSelection ! _)
+          listBuffer.clear()
+        }
+    }
   }
 
   private def computeMean(timestamp: Timestamp, f: Float): Float = {
@@ -34,29 +62,6 @@ class A2_MeanCalcutator(serverActor: ActorRef) extends Actor with ActorLogging{
     for(x <- values)
       sum += x.f
     getMeanOfPast24Hours(sum, values.size)
-  }
-
-  private def tryToRequestTimeFromDB(s: String, millisToWait: Int, maxRetries: Int): Unit = {
-    breakable{
-      for(a <- 1 to maxRetries) {
-        val result = requestTimeFromDB(s)
-
-        result match{
-          case res : Float=>
-            log.info("Received result "+res)
-            break
-          case _ =>
-            Thread.sleep(millisToWait)
-            log.info("["+a+"] Retrying in " + millisToWait + " millis...")
-        }
-      }
-      log.warning("SERVER DOES NOT RESPOND - Retry later.")
-    }
-  }
-
-  private def requestTimeFromDB(s: String): Any ={
-    val future = serverActor ? s
-    Await.result(future, timeout.duration)
   }
 
   private def getMeanOfPast24Hours(sum: Float, size: Int): Float = sum/size

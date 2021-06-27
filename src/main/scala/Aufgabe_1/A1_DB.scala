@@ -16,12 +16,19 @@ class Actor_1_1 extends Actor with ActorLogging{
   def receive: Receive = {
 
     case tat: TemperatureAtTime =>
-        log.info("INSERT INTO DB")
         insertIntoDB(tat)
+      val senderName = sender()
+      senderName ! "registered"
 
     case "count" =>
+      log.info("IN COUNT")
       val senderName = sender()
       senderName ! getDBRecord()
+
+    case "delete" =>
+      log.info("IN DELETE")
+      val senderName = sender()
+      senderName ! deleteDB()
 
     case s:String =>
       val senderName = sender()
@@ -33,18 +40,26 @@ class Actor_1_1 extends Actor with ActorLogging{
   stmtLogBegin.close()
   }
 
-  def getDBRecord(): Int ={
+  /**
+   * Aufgabe 4: Diese Methode sendet eine SQL-Anfrage an die DB
+   * um die Anzahl der in der DB vorhandenen Datensätze zu ermitteln.
+   *
+   * @return Anzahl der Datensätze in DB
+   */
+  private def getDBRecord(): Int ={
     val stmtLogBegin = conn.createStatement()
     val rs = stmtLogBegin.executeQuery(
       "SELECT COUNT(*) FROM bvs_aufgabe_1")
-    if (rs != null) {
       rs.last()
       log.info("LastRow: "+rs.getInt("COUNT(*)"))
       rs.getInt("COUNT(*)")
-    }
-    else {
-      Utils.DEFAULT_VALUE
-    }
+  }
+
+  private def deleteDB(): Any = {
+    val stmtLogBegin = conn.createStatement()
+    val rs = stmtLogBegin.executeUpdate(
+      "TRUNCATE TABLE bvs_aufgabe_1;")
+    "TRUNCATE TABLE FINISHED"
   }
 
   private def getMedianAtGivenTime(s: String): Float = {
@@ -64,8 +79,7 @@ class Actor_1_1 extends Actor with ActorLogging{
     stmtLogBegin.setTimestamp(1, tat.timestamp)
     stmtLogBegin.setFloat(2, tat.f)
     stmtLogBegin.executeUpdate()
-    stmtLogBegin.close()
-    log.info(self.path.name + " inserted (" + tat.timestamp + " | " + tat.f + ") into DB")
+    println(s"${self} inserted (" + tat.timestamp + " | " + tat.f + ") into DB")
   }
 }
 object Actor_1 extends App{
