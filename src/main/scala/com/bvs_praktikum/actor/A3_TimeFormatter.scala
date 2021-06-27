@@ -1,4 +1,4 @@
-package Aufgabe_1
+package com.bvs_praktikum.actor
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
+import com.bvs_praktikum.caseclass.TemperatureAtTime
 
 class A3_TimeFormatter(meanActor: ActorRef) extends Actor with ActorLogging{
 

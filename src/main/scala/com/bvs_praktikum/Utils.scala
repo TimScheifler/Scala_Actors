@@ -1,4 +1,4 @@
-package Aufgabe_2
+package com.bvs_praktikum
 
 import java.io.InputStreamReader
 import java.time.LocalDateTime
@@ -11,6 +11,7 @@ object Utils {
 
   private val format = DateTimeFormatter.ofPattern("dd.MM.yyyy_HH:mm:ss")
   val DEFAULT_VALUE: Int = -9999999
+
   def parseDateTime(text: String): LocalDateTime =
     LocalDateTime.parse(text, format)
 

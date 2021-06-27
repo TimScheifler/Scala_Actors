@@ -1,7 +1,9 @@
-package Aufgabe_1
+package com.bvs_praktikum.actor
 
 import java.io.FileNotFoundException
+
 import akka.actor.{Actor, ActorLogging, ActorRef}
+
 import scala.io.Source.fromFile
 
 class A4_FileReader(stringReader: ActorRef) extends Actor with ActorLogging {

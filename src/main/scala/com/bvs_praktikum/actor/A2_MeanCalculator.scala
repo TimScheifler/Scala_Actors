@@ -1,15 +1,17 @@
-package Aufgabe_1
+package com.bvs_praktikum.actor
+
 import java.sql.Timestamp
 
 import akka.actor.{ActorSelection, ActorSystem}
 import akka.cluster.ClusterEvent.{CurrentClusterState, MemberUp}
 import akka.cluster.protobuf.msg.ClusterMessages.MemberStatus
 import akka.util.Timeout
+import com.bvs_praktikum.caseclass.TemperatureAtTime
 
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.DurationInt
 
-class A2_MeanCalcutator extends RegistrationActor {
+class A2_MeanCalculator extends RegistrationActor {
 
   implicit val actorSystem: ActorSystem = context.system
 
@@ -34,7 +36,6 @@ class A2_MeanCalcutator extends RegistrationActor {
           listBuffer+=TemperatureAtTime(tat.timestamp,computeMean(tat.timestamp, tat.f))
 
         case Some(actorSelection: ActorSelection) =>
-          log.info("in some")
           actorSelection ! TemperatureAtTime(tat.timestamp,computeMean(tat.timestamp, tat.f))
       }
 
@@ -46,7 +47,6 @@ class A2_MeanCalcutator extends RegistrationActor {
       case None =>
         log.info("still not available")
       case Some(actorSelection: ActorSelection) =>
-        log.info("in some")
         if(listBuffer.nonEmpty) {
           listBuffer.foreach(actorSelection ! _)
           listBuffer.clear()

@@ -1,8 +1,8 @@
-package Aufgabe_1
+package com.bvs_praktikum.actor
 
 import akka.actor.{Actor, ActorLogging, ActorSelection, RootActorPath}
-import akka.cluster.{Cluster, Member}
 import akka.cluster.ClusterEvent.MemberUp
+import akka.cluster.{Cluster, Member}
 
 abstract class RegistrationActor extends Actor with ActorLogging {
 

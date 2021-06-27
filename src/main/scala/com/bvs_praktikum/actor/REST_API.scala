@@ -1,23 +1,23 @@
+package com.bvs_praktikum.actor
+
 import java.sql.Timestamp
 
-import Aufgabe_1.RegistrationActor
-import Aufgabe_2.Utils
 import akka.actor.{ActorLogging, ActorSelection, ActorSystem, Props}
 import akka.cluster.ClusterEvent.{CurrentClusterState, MemberUp}
 import akka.cluster.protobuf.msg.ClusterMessages.MemberStatus
-import akka.http.javadsl.server.directives.RouteDirectives
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.{Directives, Route}
-import akka.http.scaladsl.server.PathMatchers._
 import akka.http.scaladsl.server.Directives.{complete, get, path, pathPrefix}
+import akka.http.scaladsl.server.PathMatchers._
+import akka.http.scaladsl.server.{Directives, Route}
 import akka.pattern.ask
 import akka.util.Timeout
+import com.bvs_praktikum.Utils
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
 import scala.io.StdIn
 
-class REST_API_2 extends RegistrationActor with ActorLogging{
+class REST_API extends RegistrationActor with ActorLogging{
 
   implicit val actorSystem: ActorSystem = context.system
   implicit val timeout: Timeout = 5.seconds
@@ -25,7 +25,7 @@ class REST_API_2 extends RegistrationActor with ActorLogging{
   override def receive: Receive = {
     case MemberUp(member)=>log.info("received MemberUp for " + member)
       register(member)
-      startHttpServer
+      startHttpServer()
     case state:CurrentClusterState =>
       log.info("received CurrentClusterState for "+ state)
       state.members.filter(_.status==MemberStatus.Up).foreach(register)
@@ -43,7 +43,6 @@ class REST_API_2 extends RegistrationActor with ActorLogging{
                 "not available"
               )
             case Some(actorSelection: ActorSelection)=>
-              log.info("in SOME")
               val future: Future[Any] = actorSelection ? Timestamp.valueOf(Utils.parseDateTime(time)).toString
               val result: Any = Await.result(future, timeout.duration)
               complete {
@@ -91,14 +90,14 @@ class REST_API_2 extends RegistrationActor with ActorLogging{
       case None=>
         println("no HTTP Server available..")
 
-      case Some(actorSelection: ActorSelection)=>
-        val bindingFuture: Future[Http.ServerBinding] = Http().newServerAt("localhost", 8080).bind(apiRoutes)
+      case Some(_: ActorSelection)=>
+        Http().newServerAt("localhost", 8080).bind(apiRoutes)
         StdIn.readLine()
     }
   }
 }
 
-object startREST_API extends App {
+object REST_API extends App {
   val actorSystem: ActorSystem = Utils.createSystem("/client.conf", "hfu")
-  val valueActor = actorSystem.actorOf(Props[REST_API_2], name = "REST_API")
+  val valueActor = actorSystem.actorOf(Props[REST_API], name = "REST_API")
 }

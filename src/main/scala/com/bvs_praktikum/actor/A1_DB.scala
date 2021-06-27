@@ -1,13 +1,12 @@
-package Aufgabe_1
+package com.bvs_praktikum.actor
 
-import java.sql.{Connection, DriverManager, Timestamp}
+import java.sql.{Connection, DriverManager}
 
-import Aufgabe_2.Utils
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
+import com.bvs_praktikum.Utils
+import com.bvs_praktikum.caseclass.TemperatureAtTime
 
-case class TemperatureAtTime(timestamp: Timestamp, f: Float)
-
-class Actor_1_1 extends Actor with ActorLogging{
+class A1_DB extends Actor with ActorLogging{
   private val sqlInsert = """insert into bvs_aufgabe_1(zeitstempel, messwert) values (?, ?)"""
   Class.forName("org.h2.Driver")
   private val conn: Connection = DriverManager.getConnection("jdbc:h2:~/h2test", "", "")
@@ -57,8 +56,7 @@ class Actor_1_1 extends Actor with ActorLogging{
 
   private def deleteDB(): Any = {
     val stmtLogBegin = conn.createStatement()
-    val rs = stmtLogBegin.executeUpdate(
-      "TRUNCATE TABLE bvs_aufgabe_1;")
+    stmtLogBegin.executeUpdate("TRUNCATE TABLE bvs_aufgabe_1;")
     "TRUNCATE TABLE FINISHED"
   }
 
@@ -79,10 +77,10 @@ class Actor_1_1 extends Actor with ActorLogging{
     stmtLogBegin.setTimestamp(1, tat.timestamp)
     stmtLogBegin.setFloat(2, tat.f)
     stmtLogBegin.executeUpdate()
-    println(s"${self} inserted (" + tat.timestamp + " | " + tat.f + ") into DB")
+    println(s"$self inserted (" + tat.timestamp + " | " + tat.f + ") into DB")
   }
 }
-object Actor_1 extends App{
+object A1_DB extends App{
   val system = ActorSystem("hfu")
-  val server = system.actorOf(Props[Actor_1_1], name = "server-actor")
+  val server = system.actorOf(Props[A1_DB], name = "server-actor")
 }
