@@ -1,13 +1,12 @@
 package com.bvs_praktikum.actor
 
-import java.sql.Timestamp
-
 import akka.actor.{ActorSelection, ActorSystem}
 import akka.cluster.ClusterEvent.{CurrentClusterState, MemberUp}
 import akka.cluster.protobuf.msg.ClusterMessages.MemberStatus
 import akka.util.Timeout
-import com.bvs_praktikum.caseclass.TemperatureAtTime
+import com.bvs_praktikum.caseclass.{EOF, TemperatureAtTime}
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.DurationInt
 
@@ -15,53 +14,80 @@ class A2_MeanCalculator extends RegistrationActor {
 
   implicit val actorSystem: ActorSystem = context.system
 
-  val listBuffer = new ListBuffer[TemperatureAtTime]
+  var currentPath: String = ""
 
-  val values = new ListBuffer[TemperatureAtTime]
+  val hashMapBuffer = new mutable.HashMap[String, ListBuffer[TemperatureAtTime]]
+
+  val hashMapValues = new mutable.HashMap[String, ListBuffer[TemperatureAtTime]]
+
   implicit val timeout: Timeout = 5.seconds
+
+  def initIfHashMapsNonExists() = {
+    if(!hashMapBuffer.contains(currentPath))
+      hashMapBuffer.put(currentPath, new ListBuffer[TemperatureAtTime] )
+
+    if(!hashMapValues.contains(currentPath))
+      hashMapValues.put(currentPath, new ListBuffer[TemperatureAtTime] )
+  }
 
   override def receive: Receive = {
 
     case MemberUp(member)=>log.info("received MemberUp for " + member)
       register(member)
-      sendListBuffer()
+      initIfHashMapsNonExists()
+      sendListBuffer(hashMapBuffer(currentPath))
 
-    case state:CurrentClusterState =>
-      log.info("received CurrentClusterState for "+ state)
+    case state:CurrentClusterState => log.info("received CurrentClusterState for "+ state)
       state.members.filter(_.status==MemberStatus.Up).foreach(register)
 
+    case eof: EOF =>
+      currentPath
+
     case tat: TemperatureAtTime =>
+
+      if(currentPath.isEmpty)
+        currentPath = tat.path
+
+      initIfHashMapsNonExists()
+
+      log.info(currentPath)
       server match {
         case None =>
-          listBuffer+=TemperatureAtTime(tat.timestamp,computeMean(tat.timestamp, tat.f))
+          hashMapBuffer(currentPath).append(computeMean(hashMapValues(currentPath), tat))
 
         case Some(actorSelection: ActorSelection) =>
-          actorSelection ! TemperatureAtTime(tat.timestamp,computeMean(tat.timestamp, tat.f))
+          hashMapBuffer(currentPath).append(computeMean(hashMapValues(currentPath), tat))
+          sendListBuffer(hashMapBuffer(currentPath))
       }
 
     case _ => new RuntimeException("unexpected Message received...")
   }
 
-  def sendListBuffer(): Unit = {
+  def sendListBuffer(buffer: ListBuffer[TemperatureAtTime]): Unit = {
     server match {
       case None =>
         log.info("still not available")
       case Some(actorSelection: ActorSelection) =>
-        if(listBuffer.nonEmpty) {
-          listBuffer.foreach(actorSelection ! _)
-          listBuffer.clear()
+        log.info("ListBufferSize: "+hashMapBuffer(currentPath).size)
+        if(buffer.nonEmpty) {
+          buffer.foreach(actorSelection ! _)
+          buffer.clear()
         }
     }
   }
 
-  private def computeMean(timestamp: Timestamp, f: Float): Float = {
+  var count = 0
+  private def computeMean(wert: ListBuffer[TemperatureAtTime], tat: TemperatureAtTime): TemperatureAtTime = {
     var sum = 0f
-    values+=TemperatureAtTime(timestamp, f)
-    if(values.size > 145)
-      values.remove(0)
-    for(x <- values)
+    wert+=tat
+    if(wert.size > 145)
+      wert.remove(0)
+
+    for(x <- wert)
       sum += x.f
-    getMeanOfPast24Hours(sum, values.size)
+    count = count + 1
+    val mean = getMeanOfPast24Hours(sum, wert.size)
+    TemperatureAtTime(tat.timestamp, mean, tat.path)
   }
 
   private def getMeanOfPast24Hours(sum: Float, size: Int): Float = sum/size

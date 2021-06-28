@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import com.bvs_praktikum.caseclass.TemperatureAtTime
+import com.bvs_praktikum.caseclass.{EOF, LineWithFilePath, TemperatureAtTime}
 
 class A3_TimeFormatter(meanActor: ActorRef) extends Actor with ActorLogging{
 
@@ -27,9 +27,10 @@ class A3_TimeFormatter(meanActor: ActorRef) extends Actor with ActorLogging{
   }
 
   override def receive: Receive = {
-    case s: String =>
-      val list = s.split(",")
-      val tat = TemperatureAtTime(Timestamp.valueOf(test(list(0))), list(2).toFloat)
+    case eof: EOF => meanActor ! eof
+    case lineWithFilePath: LineWithFilePath =>
+      val list = lineWithFilePath.line.split(",")
+      val tat = TemperatureAtTime(Timestamp.valueOf(test(list(0))), list(2).toFloat, lineWithFilePath.path)
       updateAndMean(tat)
     case _ =>
       log.warning("Actor_3: Eingabe konnte nicht verarbeitet werden")
