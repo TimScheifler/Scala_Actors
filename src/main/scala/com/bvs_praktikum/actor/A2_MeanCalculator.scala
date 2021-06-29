@@ -16,6 +16,7 @@ class A2_MeanCalculator extends RegistrationActor {
 
   var currentPath: String = ""
 
+  val paths = new ListBuffer[String]
   val hashMapBuffer = new mutable.HashMap[String, ListBuffer[TemperatureAtTime]]
 
   val hashMapValues = new mutable.HashMap[String, ListBuffer[TemperatureAtTime]]
@@ -35,19 +36,20 @@ class A2_MeanCalculator extends RegistrationActor {
     case MemberUp(member)=>log.info("received MemberUp for " + member)
       register(member)
       initIfHashMapsNonExists()
-      sendListBuffer(hashMapBuffer(currentPath))
+      for(path<-paths)
+        sendListBuffer(hashMapBuffer(path))
 
     case state:CurrentClusterState => log.info("received CurrentClusterState for "+ state)
       state.members.filter(_.status==MemberStatus.Up).foreach(register)
 
     case eof: EOF =>
-      currentPath
+      sendListBuffer(hashMapBuffer(eof.fileName))
 
     case tat: TemperatureAtTime =>
 
-      if(currentPath.isEmpty)
-        currentPath = tat.path
-
+      currentPath = tat.path
+      if(!paths.contains())
+        paths+=(currentPath)
       initIfHashMapsNonExists()
 
       log.info(currentPath)
@@ -66,9 +68,7 @@ class A2_MeanCalculator extends RegistrationActor {
   def sendListBuffer(buffer: ListBuffer[TemperatureAtTime]): Unit = {
     server match {
       case None =>
-        log.info("still not available")
       case Some(actorSelection: ActorSelection) =>
-        log.info("ListBufferSize: "+hashMapBuffer(currentPath).size)
         if(buffer.nonEmpty) {
           buffer.foreach(actorSelection ! _)
           buffer.clear()
